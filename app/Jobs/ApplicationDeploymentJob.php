@@ -4562,6 +4562,10 @@ COPY ./nginx.conf /etc/nginx/conf.d/default.conf");
                 data_forget($custom_compose, 'deploy.resources.reservations.devices');
                 $this->application_deployment_queue->addLogEntry('GPU access is enabled in the GPU settings, so --gpus in Custom Docker Options is ignored.');
             }
+            if (data_get($custom_compose, 'labels')) {
+                data_forget($custom_compose, 'labels');
+                $this->application_deployment_queue->addLogEntry('--label in Custom Docker Options is ignored for applications. Use Container Labels instead.');
+            }
             $unsupported_options = unsupportedDockerRunOptions($this->application->custom_docker_run_options);
             if (count($unsupported_options) > 0) {
                 $this->application_deployment_queue->addLogEntry('Warning: These custom Docker options are not supported and were not applied: '.implode(', ', $unsupported_options).'. See https://coolify.io/docs/applications/builds/custom-docker-options for the supported options.', 'stderr');

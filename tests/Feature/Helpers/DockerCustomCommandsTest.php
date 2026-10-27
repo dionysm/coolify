@@ -396,6 +396,62 @@ test('DatabaseDefaultUlimitIsKeptWhenNotOverridden', function () {
     ]);
 });
 
+test('ConvertLabel', function () {
+    $input = '--label dev.dozzle.group=auro-stage';
+    $output = convertDockerRunToCompose($input);
+    expect($output)->toBe([
+        'labels' => ['dev.dozzle.group=auro-stage'],
+    ]);
+});
+
+test('ConvertMultipleLabels', function () {
+    $input = '--label dev.dozzle.group=auro-stage --label=dev.dozzle.name=auro-stage-db --label dev.dozzle.group=auro-stage';
+    $output = convertDockerRunToCompose($input);
+    expect($output)->toBe([
+        'labels' => ['dev.dozzle.group=auro-stage', 'dev.dozzle.name=auro-stage-db'],
+    ]);
+});
+
+test('ConvertQuotedLabel', function () {
+    $input = '--label "a=b c" --label d=\'e f\' --label g="h=i"';
+    $output = convertDockerRunToCompose($input);
+    expect($output)->toBe([
+        'labels' => ['a=b c', 'd=e f', 'g=h=i'],
+    ]);
+});
+
+test('ConvertIgnoresCoolifyLabels', function () {
+    $input = '--label coolify.managed=false --label Coolify.type=application --label a=b';
+    $output = convertDockerRunToCompose($input);
+    expect($output)->toBe([
+        'labels' => ['a=b'],
+    ]);
+});
+
+test('ConvertIgnoresOnlyCoolifyLabels', function () {
+    $input = '--label coolify.databaseUuid=other';
+    $output = convertDockerRunToCompose($input);
+    expect($output)->toBe([]);
+});
+
+test('DatabaseCustomLabelsAreAppendedToDefaultLabels', function () {
+    $dockerCompose = [
+        'services' => [
+            'db' => [
+                'image' => 'mariadb:11',
+                'labels' => ['coolify.managed=true', 'coolify.type=database'],
+            ],
+        ],
+    ];
+    $options = convertDockerRunToCompose('--label dev.dozzle.group=auro-stage --label coolify.type=application');
+    $output = generateCustomDockerRunOptionsForDatabases($options, $dockerCompose, 'db', 'coolify');
+    expect($output['services']['db']['labels'])->toBe([
+        'coolify.managed=true',
+        'coolify.type=database',
+        'dev.dozzle.group=auro-stage',
+    ]);
+});
+
 test('ConvertValueWithQuotedPart', function () {
     $input = '--sysctl net.ipv4.ping_group_range="0 2147483647" --ulimit nofile="1024:2048" --security-opt label="type:svirt_apache_t"';
     $output = convertDockerRunToCompose($input);

@@ -45,6 +45,7 @@ const DOCKER_RUN_OPTION_MAPPING = [
     '--read-only' => 'read_only',
     '--runtime' => 'runtime',
     '--tmpfs' => 'tmpfs',
+    '--label' => 'labels',
 ];
 const VALID_CRON_STRINGS = [
     'every_minute' => '* * * * *',

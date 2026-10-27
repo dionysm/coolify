@@ -1674,6 +1674,7 @@ function convertDockerRunToCompose(?string $custom_docker_run_options = null)
         '--shm-size',
         '--dns',
         '--tmpfs',
+        '--label',
     ]);
     $mapping = collect(DOCKER_RUN_OPTION_MAPPING);
     foreach ($matches as $match) {
@@ -1740,6 +1741,10 @@ function convertDockerRunToCompose(?string $custom_docker_run_options = null)
             continue;
         }
         if (trim($value) === '') {
+            continue;
+        }
+        // Coolify's own labels track the status and backups of the resource, so they cannot be set or overridden
+        if ($option === '--label' && str_starts_with(strtolower($value), 'coolify.')) {
             continue;
         }
         $options[$option][] = $value;
